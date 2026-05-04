@@ -1,12 +1,15 @@
 const express = require('express');
 const session = require('express-session');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const path = require('path');
 const db = require('./db');
 const { analyzeRisk } = require('./sentiment');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
 
 // Middleware
 app.use(express.json());
@@ -51,21 +54,21 @@ app.post('/api/signup', async (req, res) => {
   try {
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
-    
-    db.run('INSERT INTO Users (name, email, password, role) VALUES (?, ?, ?, ?)', 
-      [name, email, hashedPassword, userRole], 
-      function(err) {
+
+    db.run('INSERT INTO Users (name, email, password, role) VALUES (?, ?, ?, ?)',
+      [name, email, hashedPassword, userRole],
+      function (err) {
         if (err) {
           if (err.message.includes('UNIQUE')) {
             return res.status(400).json({ error: 'Email already exists' });
           }
           return res.status(500).json({ error: 'Database error' });
         }
-        
+
         req.session.userId = this.lastID;
         req.session.role = userRole;
         req.session.name = name;
-        
+
         res.json({ message: 'Signup successful', user: { id: this.lastID, name, role: userRole } });
       });
   } catch (err) {
@@ -88,7 +91,7 @@ app.post('/api/login', (req, res) => {
       req.session.userId = user.id;
       req.session.role = user.role;
       req.session.name = user.name;
-      
+
       res.json({ message: 'Login successful', user: { id: user.id, name: user.name, role: user.role, quiz_completed: user.quiz_completed } });
     } else {
       res.status(401).json({ error: 'Invalid credentials' });
@@ -112,7 +115,7 @@ app.get('/api/me', requireAuth, (req, res) => {
 
 app.post('/api/submit-quiz', requireAuth, (req, res) => {
   const { mcq_score, text_response } = req.body;
-  
+
   if (mcq_score === undefined || text_response === undefined) {
     return res.status(400).json({ error: 'Missing quiz fields' });
   }
@@ -125,18 +128,18 @@ app.post('/api/submit-quiz', requireAuth, (req, res) => {
     db.run(
       'INSERT INTO QuizResults (user_id, mcq_score, text_response, sentiment_score, risk_level) VALUES (?, ?, ?, ?, ?)',
       [req.session.userId, mcq_score, text_response, sentiment_score, risk_level],
-      function(err) {
+      function (err) {
         if (err) return res.status(500).json({ error: 'Error saving quiz results' });
-        
+
         // Update user profile to mark quiz as completed
         db.run('UPDATE Users SET quiz_completed = 1 WHERE id = ?', [req.session.userId], (updateErr) => {
           if (updateErr) console.error('Error updating quiz_completed status:', updateErr);
-          
+
           // DO NOT expose full text response in response (Privacy enforcement)
-          res.json({ 
+          res.json({
             message: 'Quiz submitted successfully',
-            risk_level, 
-            sentiment_score 
+            risk_level,
+            sentiment_score
           });
         });
       }

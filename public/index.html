@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MindCare</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Auth View -->
+  <div class="container fade-in" id="auth-view">
+    <div class="glass-card">
+      <h1>Mind<span class="accent">Care</span></h1>
+      <p class="text-center">Student Mental Health Support</p>
+      <div id="auth-message" class="message"></div>
+      
+      <div id="login-form">
+        <input type="email" id="login-email" placeholder="Email" required>
+        <input type="password" id="login-password" placeholder="Password" required>
+        <button onclick="login()">Login</button>
+        <p class="text-center">Need an account? <a href="#" onclick="toggleAuth()">Sign up</a></p>
+      </div>
+
+      <div id="signup-form" class="hidden">
+        <input type="text" id="signup-name" placeholder="Full Name" required>
+        <input type="email" id="signup-email" placeholder="Email" required>
+        <input type="password" id="signup-password" placeholder="Password" required>
+        <select id="signup-role">
+          <option value="student">Student</option>
+          <option value="counselor">Counselor</option>
+        </select>
+        <button onclick="signup()">Sign Up</button>
+        <p class="text-center">Have an account? <a href="#" onclick="toggleAuth()">Login</a></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Student Dashboard View -->
+  <div class="container wide hidden fade-in" id="student-view">
+    <div class="glass-card">
+      <h1>Welcome, <span id="student-name" class="accent"></span></h1>
+      <p class="text-center">How can we support you today?</p>
+      
+      <div class="action-grid">
+        <div class="action-card" onclick="showView('quiz-view')">
+          <span class="action-icon">🧠</span>
+          <span class="action-title">Take Quiz</span>
+        </div>
+        <div class="action-card" onclick="showView('resources-view')">
+          <span class="action-icon">🌿</span>
+          <span class="action-title">Resources</span>
+        </div>
+        <div class="action-card" onclick="logout()">
+          <span class="action-icon">🚪</span>
+          <span class="action-title">Logout</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quiz View -->
+  <div class="container wide hidden fade-in" id="quiz-view">
+    <div class="glass-card">
+      <h2>Well-being Check-in</h2>
+      
+      <div class="progress-bar-container">
+        <div class="progress-bar" style="width: 25%;"></div>
+      </div>
+
+      <form id="quiz-form" onsubmit="submitQuiz(event)">
+        <div class="question-block">
+          <label class="q-title">1. How would you rate your sleep quality lately?</label>
+          <div class="options-group">
+            <label class="quiz-option">
+              <input type="radio" name="q1" value="0" required onclick="updateProgress(50)">
+              <span class="option-card">Good</span>
+            </label>
+            <label class="quiz-option">
+              <input type="radio" name="q1" value="1" required onclick="updateProgress(50)">
+              <span class="option-card">Average</span>
+            </label>
+            <label class="quiz-option">
+              <input type="radio" name="q1" value="2" required onclick="updateProgress(50)">
+              <span class="option-card">Poor</span>
+            </label>
+          </div>
+        </div>
+        
+        <div class="question-block">
+          <label class="q-title">2. How often do you feel stressed?</label>
+          <div class="options-group">
+            <label class="quiz-option">
+              <input type="radio" name="q2" value="0" required onclick="updateProgress(75)">
+              <span class="option-card">Rarely</span>
+            </label>
+            <label class="quiz-option">
+              <input type="radio" name="q2" value="1" required onclick="updateProgress(75)">
+              <span class="option-card">Sometimes</span>
+            </label>
+            <label class="quiz-option">
+              <input type="radio" name="q2" value="2" required onclick="updateProgress(75)">
+              <span class="option-card">Often</span>
+            </label>
+          </div>
+        </div>
+        
+        <div class="question-block">
+          <label class="q-title">3. How is your focus on studies?</label>
+          <div class="options-group">
+            <label class="quiz-option">
+              <input type="radio" name="q3" value="0" required onclick="updateProgress(90)">
+              <span class="option-card">Great</span>
+            </label>
+            <label class="quiz-option">
+              <input type="radio" name="q3" value="1" required onclick="updateProgress(90)">
+              <span class="option-card">Okay</span>
+            </label>
+            <label class="quiz-option">
+              <input type="radio" name="q3" value="2" required onclick="updateProgress(90)">
+              <span class="option-card">Struggling</span>
+            </label>
+          </div>
+        </div>
+        
+        <div class="question-block">
+          <label class="q-title">4. How have you been feeling lately? (Please be honest)</label>
+          <textarea id="open-text" rows="4" placeholder="Type your thoughts here..." required oninput="updateProgress(100)"></textarea>
+        </div>
+        
+        <button type="submit">Submit Check-in</button>
+        <button type="button" class="secondary" onclick="showView('student-view')">Cancel</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Results View -->
+  <div class="container hidden fade-in" id="results-view">
+    <div class="glass-card text-center">
+      <div id="results-badge-container"></div>
+      <div id="results-message" style="margin-bottom: 24px;"></div>
+      
+      <div class="info-card">
+        <h3>💡 Tip for today</h3>
+        <p>Remember that taking a break is just as productive as studying. Be kind to yourself!</p>
+      </div>
+
+      <button onclick="showView('student-view')">Back to Dashboard</button>
+    </div>
+  </div>
+
+  <!-- Counselor Dashboard View -->
+  <div class="container wide hidden fade-in" id="counselor-view">
+    <div class="glass-card">
+      <h1>Counselor Dashboard</h1>
+      <p>Students Needing Support:</p>
+      <div id="student-list" style="margin-top: 20px;"></div>
+      <button class="secondary" onclick="logout()" style="margin-top: 20px;">Logout</button>
+    </div>
+  </div>
+
+  <!-- Resources View -->
+  <div class="container wide hidden fade-in" id="resources-view">
+    <div class="glass-card">
+      <h2>Self-Help Resources</h2>
+      
+      <div class="info-card">
+        <h3>Stress Management</h3>
+        <p>Take short breaks during study sessions. Try the Pomodoro technique (25 min study, 5 min break).</p>
+      </div>
+      
+      <div class="info-card">
+        <h3>Breathing Exercises</h3>
+        <p>Inhale for 4 seconds, hold for 4 seconds, exhale for 4 seconds. Repeat 5 times to calm your nervous system.</p>
+      </div>
+
+      <div class="info-card">
+        <h3>Mental Wellness</h3>
+        <p>Maintain a regular sleep schedule, stay hydrated, and try to get some sunlight every day.</p>
+      </div>
+      
+      <button class="secondary" onclick="showView('student-view')" style="margin-top: 15px;">Back to Dashboard</button>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
